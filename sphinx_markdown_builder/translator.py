@@ -265,24 +265,33 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
     # visit/depart handlers
     ################################################################################
 
-    @pushing_context
-    def visit_warning(self, _node):
-        """Sphinx warning directive."""
-        self._push_box("WARNING")
-
-    @pushing_context
+    def visit_admonition(self, _node, kind=""):
+        self.add(f":::{kind}", prefix_eol=1, suffix_eol=1)
+    
+    def depart_admonition(self, _node):
+        self.add(":::", prefix_eol=1, suffix_eol=2)
+    depart_warning = depart_note = depart_seealso = depart_attention = depart_tip = depart_important = depart_hint = depart_admonition
+    
     def visit_note(self, _node):
         """Sphinx note directive."""
-        self._push_box("NOTE")
+        self.visit_admonition(_node, kind="note")
 
-    @pushing_context
+    def visit_warning(self, _node):
+        """Sphinx warning directive."""
+        self.visit_admonition(_node, kind="warning")
+    def visit_important(self, _node):
+        self.visit_admonition(_node, kind="warning")
+
+    def visit_tip(self, _node):
+        self.visit_admonition(_node, kind="tip")
     def visit_seealso(self, _node):
         """Sphinx see also directive."""
-        self._push_box("SEE ALSO")
+        self.visit_admonition(_node, kind="tip")
+    def visit_hint(self, _node):
+        self.visit_admonition(_node, kind="tip")
 
-    @pushing_context
     def visit_attention(self, _node):
-        self._push_box("ATTENTION")
+        self.visit_admonition(_node, kind="danger")
 
     def visit_image(self, node):
         """Image directive."""

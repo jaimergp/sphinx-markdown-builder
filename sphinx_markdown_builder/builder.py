@@ -91,6 +91,13 @@ class MarkdownBuilder(Builder):
         out_filename = os.path.join(self.outdir, f"{os_path(docname)}{self.out_suffix}")
         ensuredir(os.path.dirname(out_filename))
 
+        frontmatter = ""
+
+        if "orphan" in self.env.metadata[docname]:
+            frontmatter = "---\nunlisted: true\n---\n\n"
+
         with io_handler(out_filename):
             with open(out_filename, "w", encoding="utf-8") as file:
+                if frontmatter:
+                    file.write(frontmatter)
                 file.write(self.writer.output)
