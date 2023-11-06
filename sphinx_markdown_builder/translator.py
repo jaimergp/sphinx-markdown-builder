@@ -265,8 +265,14 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
     # visit/depart handlers
     ################################################################################
 
-    def visit_admonition(self, _node, kind=""):
-        self.add(f":::{kind}", prefix_eol=1, suffix_eol=1)
+    def visit_admonition(self, _node, kind="note", title=None):
+        tag = f":::{kind}"
+        if _node.children and _node.children[0].__class__.__name__ == "title":
+            tag += f"[{escape_markdown_chars(_node.children[0].astext())}]"
+            _node.children.pop(0)
+        elif title:
+            tag += f"[{escape_markdown_chars(title)}]"
+        self.add(tag, prefix_eol=1, suffix_eol=1)
     
     def depart_admonition(self, _node):
         self.add(":::", prefix_eol=1, suffix_eol=2)
@@ -280,18 +286,18 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
         """Sphinx warning directive."""
         self.visit_admonition(_node, kind="warning")
     def visit_important(self, _node):
-        self.visit_admonition(_node, kind="warning")
+        self.visit_admonition(_node, kind="warning", title="Important")
 
     def visit_tip(self, _node):
         self.visit_admonition(_node, kind="tip")
     def visit_seealso(self, _node):
         """Sphinx see also directive."""
-        self.visit_admonition(_node, kind="tip")
+        self.visit_admonition(_node, kind="tip", title="See also")
     def visit_hint(self, _node):
-        self.visit_admonition(_node, kind="tip")
+        self.visit_admonition(_node, kind="tip", title="Hint")
 
     def visit_attention(self, _node):
-        self.visit_admonition(_node, kind="danger")
+        self.visit_admonition(_node, kind="danger", title="Attention")
 
     def visit_image(self, node):
         """Image directive."""
@@ -412,7 +418,14 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
 
     @pushing_context
     def visit_block_quote(self, _node):
-        self._push_context(IndentContext("> "))
+        if (
+            self.status.list_marker
+            or isinstance(_node.previous_sibling(), (nodes.enumerated_list, nodes.bullet_list))
+            or isinstance(_node.parent, (nodes.list_item, nodes.definition_list_item))
+        ):
+            self._push_context(IndentContext("    "))
+        else:
+            self._push_context(IndentContext("> "))
 
     def visit_problematic(self, node):
         self.add(f"```\n{node.astext()}\n```", prefix_eol=2, suffix_eol=2)
