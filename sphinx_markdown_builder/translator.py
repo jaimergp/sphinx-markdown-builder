@@ -302,7 +302,7 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
 
     def visit_admonition(self, _node, kind="note", title=None):
         tag = f":::{kind}"
-        if _node.children and _node.children[0].__class__.__name__ == "title":
+        if _node.children and _node.children[0].__class__.__name__ in ("title", "caption"):
             tag += f"[{escape_markdown_chars(_node.children[0].astext())}]"
             _node.children.pop(0)
         elif title:
@@ -330,6 +330,8 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
         self.visit_admonition(_node, kind="tip", title="See also")
     def visit_hint(self, _node):
         self.visit_admonition(_node, kind="tip", title="Hint")
+    def visit_todo_node(self, _node):
+        self.visit_admonition(_node, kind="info", title="To do")
 
     def visit_attention(self, _node):
         self.visit_admonition(_node, kind="danger", title="Attention")
@@ -448,6 +450,9 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
         if "language" in node:
             code_type = node["language"]
         self.add(f"```{code_type}", prefix_eol=1, suffix_eol=1)
+    
+    def visit_caption(self, _node):
+        self.add(f" # {_node.astext()}", prefix_eol=1, suffix_eol=1)
 
     def depart_literal_block(self, _node):
         self.add("```", prefix_eol=1, suffix_eol=2)
