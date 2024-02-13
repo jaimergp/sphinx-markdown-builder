@@ -32,3 +32,11 @@ more text
 ## Other text
 
 other text
+
+## Referencing terms from a glossary
+
+Some other text that refers to [Glossary2-Term2](glossaries.md#term-Glossary2-Term2).
+
+## Http domain directive
+
+### GET /users/(*int:* user_id)/posts/(tag)
