@@ -413,7 +413,7 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
     @pushing_context
     def visit_definition(self, _node):
         self._push_context(
-            IndentContext(": ", only_first=True, support_multi_line_break=True, params=SubContextParams(1, 2))
+            IndentContext("<br />", only_first=True, support_multi_line_break=True, params=SubContextParams(1, 2))
         )
 
     def visit_math_block(self, _node):
@@ -449,6 +449,14 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
         code_type = node["classes"][1] if "code" in node["classes"] else ""
         if "language" in node:
             code_type = node["language"]
+        if code_type.endswith("+jinja"):
+            code_type = code_type[:-6]
+        if code_type == "shell":
+            code_type = "shell-session"
+        if code_type == "bat":
+            code_type = "batch"
+        if code_type == "sh":
+            code_type = "bash"
         self.add(f"```{code_type}", prefix_eol=1, suffix_eol=1)
     
     def visit_caption(self, _node):
