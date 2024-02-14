@@ -82,6 +82,7 @@ PREDEFINED_ELEMENTS: Dict[str, Union[PushContext, SKIP, None]] = dict(  # pylint
     index=SKIP,
     substitution_definition=SKIP,  # the doctree already contains the text with substitutions applied.
     runrole_reference=SKIP,
+    caption=SKIP,
     # Doctree elements to ignore
     document=None,
     container=None,
@@ -311,8 +312,8 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
     
     def depart_admonition(self, _node):
         self.add(":::", prefix_eol=1, suffix_eol=2)
-    depart_warning = depart_note = depart_seealso = depart_attention = depart_tip = depart_important = depart_hint = depart_admonition
-    
+    depart_note = depart_warning = depart_important = depart_tip = depart_seealso = depart_hint = depart_todo_node = depart_attention = depart_admonition
+
     def visit_note(self, _node):
         """Sphinx note directive."""
         self.visit_admonition(_node, kind="note")
@@ -457,10 +458,12 @@ class MarkdownTranslator(SphinxTranslator):  # pylint: disable=too-many-public-m
             code_type = "batch"
         if code_type == "sh":
             code_type = "bash"
-        self.add(f"```{code_type}", prefix_eol=1, suffix_eol=1)
-    
-    def visit_caption(self, _node):
-        self.add(f" # {_node.astext()}", prefix_eol=1, suffix_eol=1)
+        tag = f"```{code_type}"
+        for sibling in node.parent.children:
+            if sibling.__class__.__name__ == "caption":
+                tag += f' title="{escape_markdown_chars(sibling.astext())}"'
+                break
+        self.add(tag, prefix_eol=1, suffix_eol=1)
 
     def depart_literal_block(self, _node):
         self.add("```", prefix_eol=1, suffix_eol=2)
